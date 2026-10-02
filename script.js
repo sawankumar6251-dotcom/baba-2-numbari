@@ -11,26 +11,16 @@ const STORE_CONFIG = {
   location: "Jhinjhana, Uttar Pradesh, India"
 };
 
-/* Instagram pictures: put files in assets/instagram/ and list them here. */
+/* Instagram pictures: upload files to assets/instagram/ and list them here (any .jpg .png .webp name works, just match it). */
 const instagramImages = [
-  "assets/instagram/insta-01.jpg",
-  "assets/instagram/insta-02.jpg",
-  "assets/instagram/insta-03.jpg",
-  "assets/instagram/insta-04.jpg"
+  "assets/instagram/instagram-01.jpg",
+  "assets/instagram/instagram-02.jpg",
+  "assets/instagram/instagram-03.jpg",
+  "assets/instagram/instagram-04.jpg"
 ];
 
-/* PRODUCTS. To add one: put the photo in assets/products/ and copy one block below.
-   Leave a field empty ("" or []) to hide it. Add  featured: true  to show a product in THE LATEST DROP
-   (if none are marked, the first 2 are used).
-   The 3 entries below are PLACEHOLDERS: replace them with the real products. */
-const products = [
-  { id: "product-01", name: "REPLACE WITH PRODUCT NAME", price: "", image: "assets/products/product-01.jpg",
-    images: [], description: "", category: "", sizes: [], colors: [], badge: "", featured: true },
-  { id: "product-02", name: "REPLACE WITH PRODUCT NAME", price: "", image: "assets/products/product-02.jpg",
-    images: [], description: "", category: "", sizes: [], colors: [], badge: "", featured: true },
-  { id: "product-03", name: "REPLACE WITH PRODUCT NAME", price: "", image: "assets/products/product-03.jpg",
-    images: [], description: "", category: "", sizes: [], colors: [], badge: "" }
-];
+/* PRODUCTS now live in products.json (same folder as index.html). Edit that file to add or change products. */
+let products = [];
 
 /* ============================================================
    CODE BELOW — you do not need to change anything
@@ -41,14 +31,14 @@ const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const C = STORE_CONFIG;
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-/* Missing image -> visible placeholder showing the filename to add */
+/* Missing image -> shows assets/icons/placeholder.svg and logs the bad path in the console */
+const FALLBACK = "assets/icons/placeholder.svg";
 addEventListener("error", e => {
   const t = e.target;
   if (t.tagName !== "IMG" || t.dataset.ph) return;
   t.dataset.ph = 1;
-  const name = "REPLACE_WITH_" + decodeURIComponent((t.getAttribute("src") || "").split("/").pop());
-  t.src = "data:image/svg+xml;utf8," + encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000"><rect width="800" height="1000" fill="#1c1c1c"/><text x="400" y="500" fill="#999" font-family="Arial" font-size="28" text-anchor="middle">${name}</text></svg>`);
+  console.warn("Image not found:", t.getAttribute("src"));
+  t.src = FALLBACK;
 }, true);
 
 /* Config -> links and text */
@@ -66,19 +56,52 @@ const buyLink = p => waLink(
 const frame = p => `<div class="frame" data-id="${p.id}" role="button" tabindex="0" aria-label="View ${esc(p.name)}">${p.badge ? `<span class="badge">${esc(p.badge)}</span>` : ""}<img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy"></div>`;
 const priceHtml = p => p.price ? `<p class="price">${esc(p.price)}</p>` : "";
 
-/* Latest drop */
-let featured = products.filter(p => p.featured);
-if (!featured.length) featured = products.slice(0, 2);
-$("#drop").innerHTML = featured.map(p => `
-  <article class="drop-item"><div class="drop-img">${frame(p)}</div>
-  <div class="drop-text reveal"><h3>${esc(p.name)}</h3>${priceHtml(p)}
-  <a class="link-btn" href="${buyLink(p)}" target="_blank" rel="noopener">Buy now →</a></div></article>`).join("");
+/* Render products (called once products.json has loaded) */
+function renderProducts() {
+  let featured = products.filter(p => p.featured);
+  if (!featured.length) featured = products.slice(0, 2);
+  $("#drop").innerHTML = featured.map(p => `
+    <article class="drop-item"><div class="drop-img">${frame(p)}</div>
+    <div class="drop-text reveal"><h3>${esc(p.name)}</h3>${priceHtml(p)}
+    <a class="link-btn" href="${buyLink(p)}" target="_blank" rel="noopener">Buy now →</a></div></article>`).join("");
+  $("#grid").innerHTML = products.map(p => `
+    <article class="card">${frame(p)}
+    <div class="card-meta"><h3>${esc(p.name)}</h3>${p.price ? `<span class="price">${esc(p.price)}</span>` : ""}</div>
+    <a class="link-btn" href="${buyLink(p)}" target="_blank" rel="noopener">Buy now →</a></article>`).join("");
+  $$(".reveal", $("#drop")).forEach(el => io.observe(el));
+  $$(".frame", $("#drop")).concat($$(".frame", $("#grid"))).forEach(f => io.observe(f.parentElement));
+}
 
-/* Collection */
-$("#grid").innerHTML = products.map(p => `
-  <article class="card">${frame(p)}
-  <div class="card-meta"><h3>${esc(p.name)}</h3>${p.price ? `<span class="price">${esc(p.price)}</span>` : ""}</div>
-  <a class="link-btn" href="${buyLink(p)}" target="_blank" rel="noopener">Buy now →</a></article>`).join("");
+/* Friendly message if products.json cannot be loaded */
+function showProductsError() {
+  $("#drop").closest("section").hidden = true;
+  $("#grid").innerHTML = `<p class="notice">Our collection could not be loaded right now. Please refresh the page, or <a class="link-btn" data-link="wa" target="_blank" rel="noopener">message us on WhatsApp →</a></p>`;
+  $$("[data-link]", $("#grid")).forEach(a => a.href = hrefs[a.dataset.link]);
+}
+
+/* Load products.json */
+async function loadProducts() {
+  try {
+    const res = await fetch("products.json", { cache: "no-cache" });
+    if (!res.ok) throw new Error(`products.json returned HTTP ${res.status}`);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error("products.json must be a list: [ { ... }, { ... } ]");
+    const seen = new Set();
+    products = data.filter(p => {
+      const ok = p && p.id && p.name && p.image && !seen.has(p.id);
+      if (!ok) console.warn("products.json: skipped an entry (needs unique id, name and image):", p);
+      if (p && p.id) seen.add(p.id);
+      return ok;
+    }).map(p => ({ price: "", description: "", category: "", badge: "", ...p,
+      sizes: p.sizes || [], colors: p.colors || [], images: p.images || [] }));
+    if (!products.length) throw new Error("products.json has no valid products");
+    renderProducts();
+    fromHash();
+  } catch (err) {
+    console.error("Could not load products:", err);
+    showProductsError();
+  }
+}
 
 /* Instagram */
 $("#ig-grid").innerHTML = instagramImages.map((s, i) => `<img src="${esc(s)}" alt="${esc(C.brandName)} on Instagram, post ${i + 1}" loading="lazy">`).join("");
@@ -121,7 +144,14 @@ addEventListener("resize", onScroll);
 onScroll();
 
 /* Reveal on scroll */
-const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .15 });
+/* A fully clipped .frame never counts as "visible", so we watch its parent and reveal the frame inside it */
+const io = new IntersectionObserver(es => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  e.target.classList.add("in");
+  const f = e.target.classList.contains("frame") ? e.target : e.target.querySelector(".frame");
+  if (f) f.classList.add("in");
+  io.unobserve(e.target);
+}), { threshold: .15 });
 $$(".reveal, .frame").forEach(el => io.observe(el));
 
 /* Product modal */
@@ -174,4 +204,4 @@ document.addEventListener("keydown", e => {
 /* Shared product link (…/#product-01) opens that product */
 const fromHash = () => { const id = location.hash.slice(1); if (products.some(p => p.id === id)) openProduct(id, false); };
 addEventListener("hashchange", fromHash);
-fromHash();
+loadProducts();

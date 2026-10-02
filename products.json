@@ -1,0 +1,40 @@
+[
+  {
+    "id": "product-01",
+    "name": "Item Name",
+    "price": "998",
+    "image": "assets/products/product-01.jpg",
+    "images": [],
+    "description": "",
+    "category": "",
+    "sizes": [],
+    "colors": [],
+    "badge": "",
+    "featured": true
+  },
+  {
+    "id": "product-02",
+    "name": "REPLACE WITH PRODUCT NAME",
+    "price": "",
+    "image": "assets/products/product-02.jpg",
+    "images": [],
+    "description": "",
+    "category": "",
+    "sizes": [],
+    "colors": [],
+    "badge": "",
+    "featured": true
+  },
+  {
+    "id": "product-03",
+    "name": "REPLACE WITH PRODUCT NAME",
+    "price": "",
+    "image": "assets/products/product-03.jpg",
+    "images": [],
+    "description": "",
+    "category": "",
+    "sizes": [],
+    "colors": [],
+    "badge": ""
+  }
+]
