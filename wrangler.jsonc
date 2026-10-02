@@ -1,0 +1,9 @@
+{
+  // IMPORTANT: "name" must be EXACTLY the Worker name shown in your Cloudflare dashboard.
+  "name": "baba2numbari",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    // Everything inside the "public" folder is uploaded and served: the website AND all images.
+    "directory": "./public"
+  }
+}
