@@ -169,3 +169,8 @@ h3{font-weight:700;font-stretch:90%}
   .hero-img{clip-path:none}.hero-copy,.reveal{opacity:1;transform:none}.frame{clip-path:none}.words span{opacity:1}
 }
 .opts[hidden]{display:none}
+.brand img{height:22px;width:auto;max-width:60vw}
+.foot-logo{height:28px;width:auto;margin-bottom:12px}
+.store-img{padding:48px var(--pad) 0}
+.store-img img{width:100%;max-height:70vh;object-fit:cover;aspect-ratio:16/9;background:#d9d9d6}
+.notice{padding:24px var(--pad);grid-column:1/-1;color:var(--mute)}

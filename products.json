@@ -1,8 +1,8 @@
 [
   {
     "id": "product-01",
-    "name": "Item Name",
-    "price": "998",
+    "name": "REPLACE WITH PRODUCT NAME",
+    "price": "",
     "image": "assets/products/product-01.jpg",
     "images": [],
     "description": "",
