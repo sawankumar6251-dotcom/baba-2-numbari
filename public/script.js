@@ -3,8 +3,8 @@
    ============================================================ */
 const STORE_CONFIG = {
   brandName: "Baba 2 Numbari",
-  whatsapp: "9195888196195",            // digits only, with country code (for wa.me)
-  phoneDisplay: "+91 95888196195",
+  whatsapp: "919588196195",            // digits only, with country code (for wa.me)
+  phoneDisplay: "+91 9588196195",
   instagramHandle: "@baba2numbri_clothes_store",
   instagramUrl: "https://www.instagram.com/baba2numbri_clothes_store/",
   mapsUrl: "https://maps.app.goo.gl/9YmNNBdQQ3FC9Vuu9",
